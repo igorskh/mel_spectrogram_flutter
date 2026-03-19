@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -8,7 +10,7 @@ class MethodChannelMelSpectrogramFlutter extends MelSpectrogramFlutterPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel('mel_spectrogram_flutter');
-  
+
   @override
   Future<String?> getPlatformVersion() async {
     final version = await methodChannel.invokeMethod<String>(
@@ -30,7 +32,7 @@ class MethodChannelMelSpectrogramFlutter extends MelSpectrogramFlutterPlatform {
   }) async {
     final samples = Float32List.fromList(audioSamples);
     final arguments = {
-      'audioSamples': samples,
+      'audioSamples': Platform.isIOS ? audioSamples : samples,
       'sampleRate': sampleRate,
       'frameSize': frameSize,
       'hopSize': hopSize,

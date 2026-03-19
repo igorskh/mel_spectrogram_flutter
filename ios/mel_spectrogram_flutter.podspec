@@ -11,14 +11,18 @@ A new Flutter plugin project.
                        DESC
   s.homepage         = 'http://example.com'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Igor Kim' => 'igor.kim.dev@pm.me' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
   s.platform = :ios, '13.0'
 
+  s.frameworks = 'CoreAudio', 'AudioToolbox', 'AVFAudio'
+  s.public_header_files = 'Classes/MelSpectrogramBridge.h'
+
   # Flutter.framework does not contain a i386 slice.
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
+  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' ,
+    'HEADER_SEARCH_PATHS' => '$(inherited)'}
   s.swift_version = '5.0'
 
   # If your plugin requires a privacy manifest, for example if it uses any
