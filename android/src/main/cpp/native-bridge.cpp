@@ -2,7 +2,7 @@
 
 #define MINIAUDIO_IMPLEMENTATION
 #define MA_NO_ENCODING
-#define MA_NO_DEVICE_IO
+// #define MA_NO_DEVICE_IO
 #define MA_NO_ENGINE
 #define MA_NO_NODE_GRAPH
 #include "miniaudio.h"
@@ -75,6 +75,47 @@ jobjectArray convert2DToJava2DArray(JNIEnv *env, const std::vector<std::vector<f
         env->DeleteLocalRef(row);
     }
 
+    return jResult;
+}
+
+// get capture devices
+extern "C" JNIEXPORT jobjectArray JNICALL
+Java_one_beagile_mel_1spectrogram_1flutter_NativeBridge_listCaptureDevices(
+    JNIEnv *env, jobject thiz)
+{
+    ma_context context;
+    ma_result result = ma_context_init(NULL, 0, NULL, &context);
+    if (result != MA_SUCCESS)
+    {
+        LOGE("Failed to initialize miniaudio context (error %d)", result);
+        return nullptr;
+    }
+
+    ma_device_info* pDeviceInfos;
+    ma_uint32 deviceCount;
+    result = ma_context_get_devices(&context, NULL, &deviceCount, &pDeviceInfos, NULL);
+    if (result != MA_SUCCESS)
+    {
+        LOGE("Failed to get devices (error %d)", result);
+        ma_context_uninit(&context);
+        return nullptr;
+    }
+
+    std::vector<std::string> device_names;
+    for (ma_uint32 i = 0; i < deviceCount; ++i)
+    {
+        device_names.push_back(pDeviceInfos[i].name);
+    }
+
+    ma_context_uninit(&context);
+
+    jobjectArray jResult = env->NewObjectArray((jsize)device_names.size(), env->FindClass("java/lang/String"), nullptr);
+    for (size_t i = 0; i < device_names.size(); ++i)
+    {
+        jstring jDeviceName = env->NewStringUTF(device_names[i].c_str());
+        env->SetObjectArrayElement(jResult, (jsize)i, jDeviceName);
+        env->DeleteLocalRef(jDeviceName);
+    }
     return jResult;
 }
 

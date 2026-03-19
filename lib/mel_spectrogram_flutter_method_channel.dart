@@ -95,4 +95,13 @@ class MethodChannelMelSpectrogramFlutter extends MelSpectrogramFlutterPlatform {
         .map<List<double>>((row) => List<double>.from(row))
         .toList();
   }
+
+  @override
+  Future<List<String>> listCaptureDevices() async {
+    final result = await methodChannel.invokeMethod<List<dynamic>>(
+      'listCaptureDevices',
+    );
+
+    return List<String>.from(result ?? []);
+  }
 }

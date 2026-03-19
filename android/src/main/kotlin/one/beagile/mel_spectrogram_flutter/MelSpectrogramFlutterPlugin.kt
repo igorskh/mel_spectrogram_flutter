@@ -127,7 +127,28 @@ class MelSpectrogramFlutterPlugin :
                     )
                 }
             }
-        }  else {
+        } else if (call.method == "listCaptureDevices") {
+            executor.execute {
+                try {
+                    val devices = NativeBridge.listCaptureDevices()
+                    if (devices != null) {
+                        result.success(devices.toCollection(ArrayList()))
+                    } else {
+                        result.error(
+                            "LIST_DEVICES_ERROR",
+                            "Failed to list capture devices",
+                            null
+                        )
+                    }
+                } catch (e: Exception) {
+                    result.error(
+                        "LIST_DEVICES_ERROR",
+                        e.message ?: "Unknown error during listing devices",
+                        null
+                    )
+                }
+            }
+        } else {
             result.notImplemented()
         }
     }

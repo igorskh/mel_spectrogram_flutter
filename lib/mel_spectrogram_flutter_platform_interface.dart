@@ -63,4 +63,8 @@ abstract class MelSpectrogramFlutterPlatform extends PlatformInterface {
       'readAndComputeMelSpectrogram() has not been implemented.',
     );
   }
+
+  Future<List<String>> listCaptureDevices() {
+    throw UnimplementedError('listCaptureDevices() has not been implemented.');
+  }
 }

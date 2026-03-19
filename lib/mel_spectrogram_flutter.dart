@@ -59,4 +59,8 @@ class MelSpectrogramFlutter {
           power: power,
         );
   }
+
+  Future<List<String>> listCaptureDevices() {
+    return MelSpectrogramFlutterPlatform.instance.listCaptureDevices();
+  }
 }

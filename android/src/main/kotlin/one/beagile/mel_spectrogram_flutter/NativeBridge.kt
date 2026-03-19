@@ -32,4 +32,6 @@ object NativeBridge {
         maxFreq: Int,
         power: Float = 2.0f
     ): Array<FloatArray>?
+
+    external fun listCaptureDevices(): Array<String>?
 }
