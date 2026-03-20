@@ -3,7 +3,13 @@ import UIKit
 
 public class MelSpectrogramFlutterPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "mel_spectrogram_flutter", binaryMessenger: registrar.messenger())
+    let taskQueue = registrar.messenger().makeBackgroundTaskQueue?()
+      
+    let channel = FlutterMethodChannel(
+        name: "mel_spectrogram_flutter",
+        binaryMessenger: registrar.messenger(),
+        codec: FlutterStandardMethodCodec.sharedInstance(),
+        taskQueue: taskQueue)
     let instance = MelSpectrogramFlutterPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
