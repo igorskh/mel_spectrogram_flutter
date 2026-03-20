@@ -30,9 +30,8 @@ class MethodChannelMelSpectrogramFlutter extends MelSpectrogramFlutterPlatform {
     int? maxFreq,
     double? power,
   }) async {
-    final samples = Float32List.fromList(audioSamples);
     final arguments = {
-      'audioSamples': Platform.isIOS ? audioSamples : samples,
+      'audioSamples': (Platform.isAndroid) ? Float32List.fromList(audioSamples) : audioSamples,
       'sampleRate': sampleRate,
       'frameSize': frameSize,
       'hopSize': hopSize,

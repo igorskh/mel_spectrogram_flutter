@@ -173,8 +173,107 @@ void MelSpectrogramFlutterPlugin::HandleMethodCall(
       }
 	  result->Success(flutter::EncodableValue(encodable_pcm_data));
   }
-  else {
-      result->NotImplemented();
+  else if ((method_call.method_name().compare("computeMelSpectrogram") == 0 || 
+      (method_call.method_name().compare("decodeFileAndComputeMelSpectrogram") == 0))) {
+      
+      int sample_rate = 44100;
+	  int frame_size = 1024;
+	  int hop_size = 512;
+	  int num_bands = 60;
+      double min_freq = 0.0;
+      double max_freq = 0.0;
+      double power = 2.0;
+
+      const auto* args = method_call.arguments();
+      const auto& map = std::get<flutter::EncodableMap>(*args);
+      auto it = map.find(flutter::EncodableValue("sampleRate"));
+      if (it != map.end()) {
+          sample_rate = std::get<int>(it->second);
+      }
+
+	  it = map.find(flutter::EncodableValue("frameSize"));
+      if (it != map.end()) {
+          frame_size = std::get<int>(it->second);
+	  }
+
+	  it = map.find(flutter::EncodableValue("hopSize"));
+      if (it != map.end()) {
+          hop_size = std::get<int>(it->second);
+	  }
+
+	  it = map.find(flutter::EncodableValue("numBands"));
+	  if (it != map.end()) {
+		  num_bands = std::get<int>(it->second);
+	  }
+
+	  it = map.find(flutter::EncodableValue("minFreq"));
+	  if (it != map.end()) {
+          if (auto* val = std::get_if<double>(&it->second)) {
+              min_freq = *val;
+          }
+	  }
+
+	  it = map.find(flutter::EncodableValue("maxFreq"));
+      if (it != map.end()) {
+          if (auto* val = std::get_if<double>(&it->second)) {
+              max_freq = *val;
+		  }
+          else {
+              max_freq = double(sample_rate) / 2;
+          }
+      }
+
+	  it = map.find(flutter::EncodableValue("power"));
+      if (it != map.end()) {
+          if (auto* val = std::get_if<double>(&it->second)) {
+              power = *val;
+          }
+	  }
+      
+      std::vector<float> pcm_data;
+       
+      if (method_call.method_name().compare("decodeFileAndComputeMelSpectrogram") == 0) {
+          const char* file_path = nullptr;
+          it = map.find(flutter::EncodableValue("filePath"));
+          if (it != map.end()) {
+              const std::string& path = std::get<std::string>(it->second);
+              file_path = path.c_str();
+          }
+          read_pcm_frames(file_path, pcm_data, (ma_uint32)sample_rate);
+      }
+      else {
+          it = map.find(flutter::EncodableValue("audioSamples"));
+          if (it != map.end()) {
+              const auto& pcm_list = std::get<flutter::EncodableList>(it->second);
+
+              for (const auto& sample : pcm_list) {
+                  pcm_data.push_back(static_cast<float>(std::get<double>(sample)));
+              }
+          }
+      }
+     
+#pragma warning(push)
+#pragma warning(disable: 4244)
+      std::vector<std::vector<float>> mel_spectrogram;
+      auto mel = mel_spectrogram::compute_mel_spectrogram(
+          pcm_data,
+          sample_rate,
+          frame_size,
+          hop_size,
+          num_bands,
+          min_freq,
+          max_freq,
+          power);
+      std::vector<flutter::EncodableValue> encodable_mel_spectrogram;
+      for (const auto& frame : mel) {
+          std::vector<flutter::EncodableValue> encodable_frame;
+          for (float value : frame) {
+              encodable_frame.push_back(flutter::EncodableValue(value));
+          }
+          encodable_mel_spectrogram.push_back(flutter::EncodableValue(encodable_frame));
+      }
+#pragma warning(pop)
+      result->Success(flutter::EncodableValue(encodable_mel_spectrogram));
   }
 }
 
