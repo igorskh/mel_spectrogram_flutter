@@ -14,8 +14,8 @@ class MelSpectrogramFlutter {
     int? minFreq,
     int? maxFreq,
     double? power,
-  }) {
-    return MelSpectrogramFlutterPlatform.instance.computeMelSpectrogram(
+  }) async {
+    return await MelSpectrogramFlutterPlatform.instance.computeMelSpectrogram(
       audioSamples: audioSamples,
       sampleRate: sampleRate,
       frameSize: frameSize,
@@ -30,8 +30,8 @@ class MelSpectrogramFlutter {
   Future<List<double>> decodeFile({
     required String filePath,
     int sampleRate = 44100,
-  }) {
-    return MelSpectrogramFlutterPlatform.instance.decodeFile(
+  }) async {
+    return await MelSpectrogramFlutterPlatform.instance.decodeFile(
       filePath: filePath,
       sampleRate: sampleRate,
     );
@@ -46,8 +46,8 @@ class MelSpectrogramFlutter {
     int? minFreq,
     int? maxFreq,
     double? power,
-  }) {
-    return MelSpectrogramFlutterPlatform.instance
+  }) async {
+    return await MelSpectrogramFlutterPlatform.instance
         .decodeFileAndComputeMelSpectrogram(
           filePath: filePath,
           sampleRate: sampleRate,
@@ -60,7 +60,7 @@ class MelSpectrogramFlutter {
         );
   }
 
-  Future<List<String>> listCaptureDevices() {
-    return MelSpectrogramFlutterPlatform.instance.listCaptureDevices();
+  Future<List<String>> listCaptureDevices() async {
+    return await MelSpectrogramFlutterPlatform.instance.listCaptureDevices();
   }
 }
