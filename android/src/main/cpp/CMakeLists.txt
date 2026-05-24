@@ -22,3 +22,9 @@ target_link_libraries(
     ${log-lib}
     android
 )
+
+target_link_options(
+    native-bridge
+    PRIVATE
+    "-Wl,-z,max-page-size=16384"
+)
