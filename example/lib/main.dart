@@ -9,8 +9,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:mel_spectrogram_flutter/mel_spectrogram_flutter.dart';
-import 'package:mel_spectrogram_flutter/mel_spectrogram_plot.dart';
-
 
 void main() {
   runApp(const MyApp());
@@ -110,8 +108,7 @@ class _MyAppState extends State<MyApp> {
 
             Text('Playhead: ${(_playheadPosition * 100).toStringAsFixed(1)}%'),
 
-            if (_computeTime != null)
-              Text('Compute time: $_computeTime ms'),
+            if (_computeTime != null) Text('Compute time: $_computeTime ms'),
 
             // configuration form
             Expanded(
