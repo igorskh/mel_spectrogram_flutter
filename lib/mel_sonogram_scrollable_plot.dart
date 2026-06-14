@@ -111,13 +111,13 @@ class _MelSonogramScrollablePlotState extends State<MelSonogramScrollablePlot> {
       viewportWidth: viewportWidth,
       plotWidth: plotWidth,
     );
-    setState(() => _isDragging = true);
+    _isDragging = true;
     widget.onPlayheadPositionChanged?.call(fraction);
   }
 
   void _onSeekEnd() {
     Future.delayed(const Duration(milliseconds: 200), () {
-      if (mounted) setState(() => _isDragging = false);
+      if (mounted) _isDragging = false;
     });
   }
 
@@ -161,12 +161,13 @@ class _MelSonogramScrollablePlotState extends State<MelSonogramScrollablePlot> {
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification is ScrollStartNotification) {
-          setState(() => _isDragging = true);
+          _isDragging = true;
         } else if (notification is ScrollEndNotification) {
-          setState(() => _isDragging = false);
+          _isDragging = false;
         }
 
         if (notification is ScrollUpdateNotification &&
+            notification.dragDetails != null &&
             _lastViewportWidth != null &&
             _lastPlotWidth != null) {
           final scrollOffset = notification.metrics.pixels;
