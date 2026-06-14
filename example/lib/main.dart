@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mel_spectrogram_flutter/mel_sonogram_scrollable_plot.dart';
 import 'dart:async';
 
 import 'package:path_provider/path_provider.dart';
@@ -37,6 +38,7 @@ class _MyAppState extends State<MyApp> {
   double _power = 6.0;
 
   int? _computeTime;
+  double _playheadPosition = 0.0;
 
   Future<void> _computeSpectrogram() async {
     setState(() {
@@ -94,7 +96,19 @@ class _MyAppState extends State<MyApp> {
             if (_error.isNotEmpty) Text(_error),
 
             if (_spectrogram != null && _spectrogram!.isNotEmpty)
-              MelSpectrogramPlot(spectrogram: _spectrogram!),
+              MelSonogramScrollablePlot(
+                spectrogram: _spectrogram!,
+                frameDurationSeconds: _hopSize / _sampleRate,
+                visibleSeconds: 5,
+                playheadPosition: _playheadPosition,
+                onPlayheadPositionChanged: (pos) {
+                  setState(() {
+                    _playheadPosition = pos;
+                  });
+                },
+              ),
+
+            Text('Playhead: ${(_playheadPosition * 100).toStringAsFixed(1)}%'),
 
             if (_computeTime != null)
               Text('Compute time: $_computeTime ms'),
