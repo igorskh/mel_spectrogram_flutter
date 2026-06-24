@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mel_spectrogram_flutter/mel_sonogram_scrollable_plot.dart';
+import 'package:mel_spectrogram_flutter/waveform_plot.dart';
 import 'dart:async';
 
 import 'package:path_provider/path_provider.dart';
@@ -27,6 +28,7 @@ class _MyAppState extends State<MyApp> {
   String _assetFilePath = 'assets/test_large_96k.wav';
   String _error = "";
   List<List<double>>? _spectrogram;
+  List<double>? _samples;
   bool _isLoading = false;
 
   int _sampleRate = 44100;
@@ -62,8 +64,14 @@ class _MyAppState extends State<MyApp> {
         power: _power,
       );
 
+      final samples = await _plugin.decodeFile(
+        filePath: outPath,
+        sampleRate: _sampleRate,
+      );
+
       setState(() {
         _spectrogram = spec;
+        _samples = samples;
       });
     } catch (e) {
       setState(() {
@@ -92,6 +100,19 @@ class _MyAppState extends State<MyApp> {
         body: Column(
           children: [
             if (_error.isNotEmpty) Text(_error),
+
+            if (_samples != null && _samples!.isNotEmpty)
+              WaveformPlot(
+                waveform: _samples!,
+                waveformSampleRateHz: _sampleRate.toDouble(),
+                paintedSamplesPerSecond: 10,
+                playheadPosition: _playheadPosition,
+                onPlayheadPositionChanged: (pos) {
+                  setState(() {
+                    _playheadPosition = pos;
+                  });
+                },
+              ),
 
             if (_spectrogram != null && _spectrogram!.isNotEmpty)
               MelSonogramScrollablePlot(

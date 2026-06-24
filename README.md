@@ -35,6 +35,7 @@ flutter pub get
 import 'package:mel_spectrogram_flutter/mel_spectrogram_flutter.dart';
 import 'package:mel_spectrogram_flutter/mel_spectrogram_plot.dart';
 import 'package:mel_spectrogram_flutter/mel_sonogram_scrollable_plot.dart';
+import 'package:mel_spectrogram_flutter/waveform_plot.dart';
 import 'package:mel_spectrogram_flutter/color_map.dart';
 ```
 
@@ -173,6 +174,65 @@ class _ScrollableSpecViewState extends State<ScrollableSpecView> {
 	}
 }
 ```
+
+### Waveform plot
+
+Use `WaveformPlot` to render a normalized, centered waveform with an
+interactive playhead. You can also limit draw density with
+`paintedSamplesPerSecond` so large files stay efficient.
+
+```dart
+class WaveformView extends StatefulWidget {
+	const WaveformView({super.key});
+
+	@override
+	State<WaveformView> createState() => _WaveformViewState();
+}
+
+class _WaveformViewState extends State<WaveformView> {
+	final plugin = MelSpectrogramFlutter();
+	List<double>? waveform;
+	double playheadPosition = 0.0;
+
+	static const int sampleRate = 44100;
+
+	@override
+	void initState() {
+		super.initState();
+		_load();
+	}
+
+	Future<void> _load() async {
+		final pcm = await plugin.decodeFile(
+			filePath: '/absolute/path/to/audio.wav',
+			sampleRate: sampleRate,
+		);
+		if (!mounted) return;
+		setState(() => waveform = pcm);
+	}
+
+	@override
+	Widget build(BuildContext context) {
+		if (waveform == null) return const CircularProgressIndicator();
+
+		return WaveformPlot(
+			waveform: waveform!,
+			height: 140,
+			colorMap: ColorMap.grayscale,
+			playheadColor: Colors.red,
+			playheadPosition: playheadPosition,
+			waveformSampleRateHz: sampleRate.toDouble(),
+			paintedSamplesPerSecond: 200, // Downsample for rendering.
+			onPlayheadPositionChanged: (pos) {
+				// Seek your player here and update state.
+				setState(() => playheadPosition = pos);
+			},
+		);
+	}
+}
+```
+
+
 
 ## API Notes
 
