@@ -58,6 +58,8 @@ class _WaveformPlotState extends State<WaveformPlot> {
       _isDragging = true;
       _playheadPosition = newPosition;
     });
+
+    widget.onPlayheadPositionChanged?.call(newPosition);
   }
 
   void _onSeekEnd() {
