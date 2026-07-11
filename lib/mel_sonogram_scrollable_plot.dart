@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -20,6 +19,10 @@ class MelSonogramScrollablePlot extends StatefulWidget {
   final List<List<double>> spectrogram;
   final double height;
   final ColorMap colorMap;
+  final Function()? onPlayheadDragStart;
+  final Function()? onPlayheadDragEnd;
+  final Function(double)? onTapped;
+  final int tapDebounceMillis;
 
   /// How many seconds should be visible in the viewport at once.
   final double visibleSeconds;
@@ -50,6 +53,10 @@ class MelSonogramScrollablePlot extends StatefulWidget {
     this.colorMap = ColorMap.grayscale,
     this.playheadColor = Colors.red,
     this.onPlayheadPositionChanged,
+    this.onPlayheadDragStart,
+    this.onPlayheadDragEnd,
+    this.onTapped,
+    this.tapDebounceMillis = 200,
   });
 
   @override
@@ -62,6 +69,7 @@ class _MelSonogramScrollablePlotState extends State<MelSonogramScrollablePlot> {
   double? _lastViewportWidth;
   double? _lastPlotWidth;
   bool _isDragging = false;
+  bool _hasActiveSeekGesture = false;
 
   @override
   void dispose() {
@@ -101,24 +109,38 @@ class _MelSonogramScrollablePlotState extends State<MelSonogramScrollablePlot> {
     return plotX / plotWidth;
   }
 
-  void _onSeekUpdate({
+  void _beginSeekGesture() {
+    if (_hasActiveSeekGesture) {
+      return;
+    }
+    _hasActiveSeekGesture = true;
+    widget.onPlayheadDragStart?.call();
+  }
+
+  void _onTapped({
     required Offset localPosition,
     required double viewportWidth,
     required double plotWidth,
   }) {
-    final fraction = _localXToFraction(
-      localX: localPosition.dx,
-      viewportWidth: viewportWidth,
-      plotWidth: plotWidth,
-    );
-    _isDragging = true;
-    widget.onPlayheadPositionChanged?.call(fraction);
+    Future.delayed(Duration(milliseconds: widget.tapDebounceMillis), () {
+      if (_hasActiveSeekGesture) {
+        return;
+      }
+      final fraction = _localXToFraction(
+        localX: localPosition.dx,
+        viewportWidth: viewportWidth,
+        plotWidth: plotWidth,
+      );
+      widget.onTapped?.call(fraction);
+    });
   }
 
   void _onSeekEnd() {
-    Future.delayed(const Duration(milliseconds: 200), () {
-      if (mounted) _isDragging = false;
-    });
+    if (!_hasActiveSeekGesture) {
+      return;
+    }
+    _hasActiveSeekGesture = false;
+    widget.onPlayheadDragEnd?.call();
   }
 
   void _scheduleCentering() {
@@ -162,6 +184,9 @@ class _MelSonogramScrollablePlotState extends State<MelSonogramScrollablePlot> {
       onNotification: (notification) {
         if (notification is ScrollStartNotification) {
           _isDragging = true;
+          if (notification.dragDetails != null) {
+            _beginSeekGesture();
+          }
         } else if (notification is ScrollEndNotification) {
           _isDragging = false;
         }
@@ -185,77 +210,82 @@ class _MelSonogramScrollablePlotState extends State<MelSonogramScrollablePlot> {
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-        final viewportWidth = constraints.maxWidth.isFinite
-            ? constraints.maxWidth
-            : MediaQuery.sizeOf(context).width;
-        final safeVisibleSeconds = max(widget.visibleSeconds, 1e-6);
-        final durationScale = totalDuration <= 0
-            ? 1.0
-            : totalDuration / safeVisibleSeconds;
-        final plotWidth = max(viewportWidth, viewportWidth * durationScale);
-        final contentWidth = plotWidth + viewportWidth;
+          final viewportWidth = constraints.maxWidth.isFinite
+              ? constraints.maxWidth
+              : MediaQuery.sizeOf(context).width;
+          final safeVisibleSeconds = max(widget.visibleSeconds, 1e-6);
+          final durationScale = totalDuration <= 0
+              ? 1.0
+              : totalDuration / safeVisibleSeconds;
+          final plotWidth = max(viewportWidth, viewportWidth * durationScale);
+          final contentWidth = plotWidth + viewportWidth;
 
-        final dimensionsChanged =
-            _lastViewportWidth != viewportWidth || _lastPlotWidth != plotWidth;
-        _lastViewportWidth = viewportWidth;
-        _lastPlotWidth = plotWidth;
+          final dimensionsChanged =
+              _lastViewportWidth != viewportWidth ||
+              _lastPlotWidth != plotWidth;
+          _lastViewportWidth = viewportWidth;
+          _lastPlotWidth = plotWidth;
 
-        if (dimensionsChanged) {
-          _scheduleCentering();
-        }
+          if (dimensionsChanged) {
+            _scheduleCentering();
+          }
 
-        return SizedBox(
-          height: widget.height,
-          child: Stack(
-            children: [
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTapDown: (details) {
-                  _onSeekUpdate(
-                    localPosition: details.localPosition,
-                    viewportWidth: viewportWidth,
-                    plotWidth: plotWidth,
-                  );
-                  _onSeekEnd();
-                },
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  scrollDirection: Axis.horizontal,
-                  physics: const ClampingScrollPhysics(),
-                  child: SizedBox(
-                    width: contentWidth,
-                    height: widget.height,
-                    child: Row(
-                      children: [
-                        SizedBox(width: viewportWidth / 2),
-                        SizedBox(
-                          width: plotWidth,
-                          height: widget.height,
-                          child: SpectrogramPainterWidget(
-                            spectrogram: widget.spectrogram,
-                            colorMap: widget.colorMap,
-                          ),
+          return SizedBox(
+            height: widget.height,
+            child: Stack(
+              children: [
+                Listener(
+                  behavior: HitTestBehavior.opaque,
+                  onPointerUp: (_) => _onSeekEnd(),
+                  onPointerCancel: (_) => _onSeekEnd(),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTapDown: (details) {
+                      _onTapped(
+                        localPosition: details.localPosition,
+                        viewportWidth: viewportWidth,
+                        plotWidth: plotWidth,
+                      );
+                    },
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      scrollDirection: Axis.horizontal,
+                      physics: const ClampingScrollPhysics(),
+                      child: SizedBox(
+                        width: contentWidth,
+                        height: widget.height,
+                        child: Row(
+                          children: [
+                            SizedBox(width: viewportWidth / 2),
+                            SizedBox(
+                              width: plotWidth,
+                              height: widget.height,
+                              child: SpectrogramPainterWidget(
+                                spectrogram: widget.spectrogram,
+                                colorMap: widget.colorMap,
+                              ),
+                            ),
+                            SizedBox(width: viewportWidth / 2),
+                          ],
                         ),
-                        SizedBox(width: viewportWidth / 2),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: CustomPaint(
-                    painter: PlayheadPainter(0.5, widget.playheadColor),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: PlayheadPainter(0.5, widget.playheadColor),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
-}
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 typedef MelSpectrogramScrollablePlot = MelSonogramScrollablePlot;

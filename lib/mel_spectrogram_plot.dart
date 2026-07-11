@@ -20,6 +20,8 @@ class MelSpectrogramPlot extends StatefulWidget {
   final double? playheadPosition;
 
   final Function(double)? onPlayheadPositionChanged;
+  final Function()? onPlayheadDragStart;
+  final Function()? onPlayheadDragEnd;
 
   const MelSpectrogramPlot({
     super.key,
@@ -29,6 +31,8 @@ class MelSpectrogramPlot extends StatefulWidget {
     this.playheadColor = Colors.red,
     this.playheadPosition,
     this.onPlayheadPositionChanged,
+    this.onPlayheadDragStart,
+    this.onPlayheadDragEnd,
   });
 
   @override
@@ -92,12 +96,19 @@ class _MelSpectrogramPlotState extends State<MelSpectrogramPlot> {
           // Handle dragging
           onHorizontalDragStart: (details) {
             _onDragUpdate(details.localPosition, totalWidth);
+            widget.onPlayheadDragStart?.call();
           },
           onHorizontalDragUpdate: (details) {
             _onDragUpdate(details.localPosition, totalWidth);
           },
-          onHorizontalDragEnd: (_) => _onDragEnd(),
-          onHorizontalDragCancel: _onDragEnd,
+          onHorizontalDragEnd: (_) {
+            _onDragEnd();
+            widget.onPlayheadDragEnd?.call();
+          },
+          onHorizontalDragCancel: () {
+            _onDragEnd();
+            widget.onPlayheadDragEnd?.call();
+          },
           child: Stack(
             children: [
               SizedBox(

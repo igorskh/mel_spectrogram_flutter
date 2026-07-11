@@ -1,3 +1,7 @@
+## 0.0.6
+* Bugfix: Tap gesture interfers with dragging
+* Feature: Separate tap gesture
+
 ## 0.0.5
 * Feature: Implement scrollable sonogram with configurable visible range.
 

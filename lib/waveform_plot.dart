@@ -11,6 +11,8 @@ class WaveformPlot extends StatefulWidget {
   final Function(double)? onPlayheadPositionChanged;
   final double? waveformSampleRateHz;
   final double? paintedSamplesPerSecond;
+  final Function()? onPlayheadDragStart;
+  final Function()? onPlayheadDragEnd;
 
   const WaveformPlot({
     super.key,
@@ -22,6 +24,8 @@ class WaveformPlot extends StatefulWidget {
     this.onPlayheadPositionChanged,
     this.waveformSampleRateHz,
     this.paintedSamplesPerSecond,
+    this.onPlayheadDragStart,
+    this.onPlayheadDragEnd,
   });
 
   @override
@@ -80,12 +84,19 @@ class _WaveformPlotState extends State<WaveformPlot> {
           },
           onHorizontalDragStart: (details) {
             _onSeekUpdate(details.localPosition, totalWidth);
+            widget.onPlayheadDragStart?.call();
           },
           onHorizontalDragUpdate: (details) {
             _onSeekUpdate(details.localPosition, totalWidth);
           },
-          onHorizontalDragEnd: (_) => _onSeekEnd(),
-          onHorizontalDragCancel: _onSeekEnd,
+          onHorizontalDragEnd: (_) {
+            _onSeekEnd();
+            widget.onPlayheadDragEnd?.call();
+          },
+          onHorizontalDragCancel: () {
+            _onSeekEnd();
+            widget.onPlayheadDragEnd?.call();
+          },
           child: CustomPaint(
             painter: WaveformPainter(
               waveform: widget.waveform,
@@ -157,8 +168,8 @@ class WaveformPainter extends CustomPainter {
     // Draw normalized bars around the horizontal center line.
     for (int i = 0; i < barCount; i++) {
       final int sampleIndex = math.min(i * sampleStride, waveform.length - 1);
-      final double normalized =
-          (waveform[sampleIndex].abs() / normalization).clamp(0.0, 1.0);
+      final double normalized = (waveform[sampleIndex].abs() / normalization)
+          .clamp(0.0, 1.0);
       final double barHalf = normalized * halfHeight;
       final double x = (i + 0.5) * barSpacing;
 
