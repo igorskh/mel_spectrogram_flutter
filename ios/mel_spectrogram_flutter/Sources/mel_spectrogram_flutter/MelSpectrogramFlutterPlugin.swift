@@ -1,5 +1,8 @@
 import Flutter
 import UIKit
+#if SWIFT_PACKAGE
+import MelSpectrogramBridge
+#endif
 
 public class MelSpectrogramFlutterPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
