@@ -11,6 +11,7 @@ class WaveformPlot extends StatefulWidget {
   final Function(double)? onPlayheadPositionChanged;
   final double? waveformSampleRateHz;
   final double? paintedSamplesPerSecond;
+  final int? barsCount;
   final Function()? onPlayheadDragStart;
   final Function()? onPlayheadDragEnd;
 
@@ -24,6 +25,7 @@ class WaveformPlot extends StatefulWidget {
     this.onPlayheadPositionChanged,
     this.waveformSampleRateHz,
     this.paintedSamplesPerSecond,
+    this.barsCount,
     this.onPlayheadDragStart,
     this.onPlayheadDragEnd,
   });
@@ -107,6 +109,7 @@ class _WaveformPlotState extends State<WaveformPlot> {
               playheadPosition: _playheadPosition,
               waveformSampleRateHz: widget.waveformSampleRateHz,
               paintedSamplesPerSecond: widget.paintedSamplesPerSecond,
+              barsCount: widget.barsCount,
             ),
             size: Size(double.infinity, widget.height),
           ),
@@ -123,6 +126,7 @@ class WaveformPainter extends CustomPainter {
   final double? playheadPosition;
   final double? waveformSampleRateHz;
   final double? paintedSamplesPerSecond;
+  final int? barsCount;
 
   WaveformPainter({
     required this.waveform,
@@ -131,6 +135,7 @@ class WaveformPainter extends CustomPainter {
     this.playheadPosition,
     this.waveformSampleRateHz,
     this.paintedSamplesPerSecond,
+    this.barsCount,
   });
 
   @override
@@ -158,8 +163,13 @@ class WaveformPainter extends CustomPainter {
       );
     }
 
-    final int barCount = ((waveform.length + sampleStride - 1) ~/ sampleStride)
-        .clamp(1, waveform.length);
+    int barCount;
+    if (barsCount != null && barsCount! > 0) {
+      barCount = barsCount!;
+    } else {
+      barCount = ((waveform.length + sampleStride - 1) ~/ sampleStride)
+          .clamp(1, waveform.length);
+    }
     final double barSpacing = size.width / barCount;
     final double barStrokeWidth = barSpacing.clamp(1.0, 3.0);
 
@@ -169,7 +179,9 @@ class WaveformPainter extends CustomPainter {
 
     // Draw normalized bars around the horizontal center line.
     for (int i = 0; i < barCount; i++) {
-      final int sampleIndex = math.min(i * sampleStride, waveform.length - 1);
+      final int sampleIndex = barsCount != null && barsCount! > 0
+          ? ((i * waveform.length) / barCount).round().clamp(0, waveform.length - 1)
+          : math.min(i * sampleStride, waveform.length - 1);
       final double normalized = (waveform[sampleIndex].abs() / normalization)
           .clamp(0.0, 1.0);
       final double barHalf = normalized * halfHeight;
@@ -199,6 +211,7 @@ class WaveformPainter extends CustomPainter {
         playheadColor != oldDelegate.playheadColor ||
         playheadPosition != oldDelegate.playheadPosition ||
         waveformSampleRateHz != oldDelegate.waveformSampleRateHz ||
-        paintedSamplesPerSecond != oldDelegate.paintedSamplesPerSecond;
+        paintedSamplesPerSecond != oldDelegate.paintedSamplesPerSecond ||
+        barsCount != oldDelegate.barsCount;
   }
 }
