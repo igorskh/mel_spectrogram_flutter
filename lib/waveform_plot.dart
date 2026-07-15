@@ -156,7 +156,6 @@ class WaveformPainter extends CustomPainter {
         paintedSamplesPerSecond != null &&
         waveformSampleRateHz! > 0 &&
         paintedSamplesPerSecond! > 0) {
-      // Keep at most the configured number of painted samples per second.
       sampleStride = math.max(
         1,
         (waveformSampleRateHz! / paintedSamplesPerSecond!).round(),
@@ -177,7 +176,6 @@ class WaveformPainter extends CustomPainter {
       ..strokeWidth = barStrokeWidth
       ..strokeCap = StrokeCap.round;
 
-    // Draw normalized bars around the horizontal center line.
     for (int i = 0; i < barCount; i++) {
       final int sampleIndex = barsCount != null && barsCount! > 0
           ? ((i * waveform.length) / barCount).round().clamp(0, waveform.length - 1)
