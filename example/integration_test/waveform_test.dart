@@ -4,8 +4,10 @@ import 'package:integration_test/integration_test.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mel_spectrogram_flutter/color_map.dart';
 
 import 'package:mel_spectrogram_flutter/mel_spectrogram_flutter.dart';
+import 'package:mel_spectrogram_flutter/waveform_placeholder.dart';
 import 'package:mel_spectrogram_flutter/waveform_plot.dart';
 
 import 'package:path/path.dart' as p;
@@ -97,5 +99,25 @@ Future<void> main() async {
     await binding.convertFlutterSurfaceToImage();
     await tester.pumpAndSettle();
     await binding.takeScreenshot('test_large_96k_with_bar_count_waveform.wav');
+  });
+
+  testWidgets('waveform plaaceholder', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: WaveformPlaceholder(
+              height: 200,
+              barsCount: 100,
+              colorMap: ColorMap.inverseGrayscale,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await binding.convertFlutterSurfaceToImage();
+    await tester.pumpAndSettle();
+    await binding.takeScreenshot('test_large_96k_waveform_placeholder');
   });
 }
