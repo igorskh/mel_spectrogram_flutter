@@ -5,11 +5,13 @@ class WaveformPlaceholder extends StatelessWidget {
   final double height;
   final int barsCount;
   final ColorMap colorMap;
+  final double normalizedValue;
 
   const WaveformPlaceholder({
     super.key,
     this.height = 200,
     this.barsCount = 64,
+    this.normalizedValue = 1.0,
     this.colorMap = ColorMap.grayscale,
   });
 
@@ -24,6 +26,7 @@ class WaveformPlaceholder extends StatelessWidget {
             barsCount: barsCount,
             colorMap: colorMap,
             totalWidth: totalWidth,
+            normalizedValue: normalizedValue,
           ),
           size: Size(double.infinity, height),
         );
@@ -37,19 +40,20 @@ class _WaveformPlaceholderPainter extends CustomPainter {
   final int barsCount;
   final ColorMap colorMap;
   final double totalWidth;
+  final double normalizedValue;
 
   _WaveformPlaceholderPainter({
     required this.height,
     required this.barsCount,
     required this.colorMap,
     required this.totalWidth,
+    required this.normalizedValue,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final double barSpacing = totalWidth / barsCount;
     final double barStrokeWidth = (totalWidth / barsCount).clamp(1.0, 3.0);
-    final double centerY = size.height / 2;
 
     final Paint paint = Paint()
       ..strokeWidth = barStrokeWidth
@@ -57,13 +61,8 @@ class _WaveformPlaceholderPainter extends CustomPainter {
 
     for (int i = 0; i < barsCount; i++) {
       final double x = (i + 0.5) * barSpacing;
-      final double normalized = (i / barsCount).clamp(0.0, 1.0);
-      paint.color = Color(colorMap.toArgb(normalized));
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        paint,
-      );
+      paint.color = Color(colorMap.toArgb(normalizedValue));
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
   }
 
