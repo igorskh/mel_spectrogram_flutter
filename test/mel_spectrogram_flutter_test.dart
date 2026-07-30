@@ -9,6 +9,26 @@ class MockMelSpectrogramFlutterPlatform
     implements MelSpectrogramFlutterPlatform {
   @override
   Future<String?> getPlatformVersion() => Future.value('42');
+  
+  @override
+  Future<List<List<double>>> computeMelSpectrogram({required List<double> audioSamples, required int sampleRate, required int frameSize, required int hopSize, required int numBands, int? minFreq, int? maxFreq, double? power}) {
+    throw UnimplementedError();
+  }
+  
+  @override
+  Future<List<double>> decodeFile({required String filePath, int sampleRate = 44100}) {
+    throw UnimplementedError();
+  }
+  
+  @override
+  Future<List<List<double>>> decodeFileAndComputeMelSpectrogram({required String filePath, required int sampleRate, required int frameSize, required int hopSize, required int numBands, int? minFreq, int? maxFreq, double? power}) {
+    throw UnimplementedError();
+  }
+  
+  @override
+  Future<List<String>> listCaptureDevices() {
+    throw UnimplementedError();
+  }
 }
 
 void main() {
