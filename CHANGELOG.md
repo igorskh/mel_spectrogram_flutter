@@ -1,3 +1,6 @@
+## 0.0.8
+* Feature: Time and frequency axis ticks on scrollable sonogram
+
 ## 0.0.7
 * Feature: SwiftPM migration
 * Feature: Placeholder waveform

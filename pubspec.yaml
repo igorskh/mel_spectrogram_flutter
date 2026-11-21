@@ -1,6 +1,6 @@
 name: mel_spectrogram_flutter
 description: "A Flutter plugin for generating Mel sonograms and waveforms from audio data."
-version: 0.0.7
+version: 0.0.8
 homepage:
 
 environment:
