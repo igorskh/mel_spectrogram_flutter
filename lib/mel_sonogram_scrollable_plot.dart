@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:mel_spectrogram_flutter/color_map.dart';
 import 'package:mel_spectrogram_flutter/playhead_painter.dart';
+import 'package:mel_spectrogram_flutter/sonogram_axes_painter.dart';
 import 'package:mel_spectrogram_flutter/spectrogram_painter_widget.dart';
 
 /// Scrollable Mel sonogram view that keeps [currentTimeSeconds] centered.
@@ -43,6 +44,24 @@ class MelSonogramScrollablePlot extends StatefulWidget {
   /// in [0, 1] relative to the full spectrogram duration.
   final Function(double)? onPlayheadPositionChanged;
 
+  /// Whether to draw time ticks (bottom) and frequency ticks (left).
+  final bool showAxes;
+
+  /// Frequency range covered by the mel bands, used for the frequency ticks.
+  /// Defaults match a 44.1 kHz sample rate (0 Hz to Nyquist).
+  final double minFrequencyHz;
+  final double maxFrequencyHz;
+
+  /// Color of the frequency ticks, drawn over the spectrogram.
+  final Color axisColor;
+
+  /// Color of the time ticks, drawn below the spectrogram. Defaults to the
+  /// theme's `onSurface` color.
+  final Color? timeAxisColor;
+
+  /// Height reserved below the spectrogram for time labels when [showAxes].
+  static const double timeAxisHeight = 20;
+
   const MelSonogramScrollablePlot({
     super.key,
     required this.spectrogram,
@@ -57,6 +76,11 @@ class MelSonogramScrollablePlot extends StatefulWidget {
     this.onPlayheadDragEnd,
     this.onTapped,
     this.tapDebounceMillis = 200,
+    this.showAxes = true,
+    this.minFrequencyHz = 0,
+    this.maxFrequencyHz = 22050,
+    this.axisColor = Colors.white70,
+    this.timeAxisColor,
   });
 
   @override
@@ -230,6 +254,14 @@ class _MelSonogramScrollablePlotState extends State<MelSonogramScrollablePlot> {
             _scheduleCentering();
           }
 
+          final axisHeight = widget.showAxes
+              ? MelSonogramScrollablePlot.timeAxisHeight
+              : 0.0;
+          final availableHeight = constraints.maxHeight.isFinite
+              ? min(widget.height, constraints.maxHeight)
+              : widget.height;
+          final plotHeight = max(0.0, availableHeight - axisHeight);
+
           return SizedBox(
             height: widget.height,
             child: Stack(
@@ -254,24 +286,64 @@ class _MelSonogramScrollablePlotState extends State<MelSonogramScrollablePlot> {
                       child: SizedBox(
                         width: contentWidth,
                         height: widget.height,
-                        child: Row(
+                        child: Column(
                           children: [
-                            SizedBox(width: viewportWidth / 2),
                             SizedBox(
-                              width: plotWidth,
-                              height: widget.height,
-                              child: SpectrogramPainterWidget(
-                                spectrogram: widget.spectrogram,
-                                colorMap: widget.colorMap,
+                              height: plotHeight,
+                              child: Row(
+                                children: [
+                                  SizedBox(width: viewportWidth / 2),
+                                  SizedBox(
+                                    width: plotWidth,
+                                    height: plotHeight,
+                                    child: SpectrogramPainterWidget(
+                                      spectrogram: widget.spectrogram,
+                                      colorMap: widget.colorMap,
+                                    ),
+                                  ),
+                                  SizedBox(width: viewportWidth / 2),
+                                ],
                               ),
                             ),
-                            SizedBox(width: viewportWidth / 2),
+                            if (widget.showAxes)
+                              SizedBox(
+                                width: contentWidth,
+                                height: axisHeight,
+                                child: CustomPaint(
+                                  painter: TimeAxisPainter(
+                                    leadingPadding: viewportWidth / 2,
+                                    plotWidth: plotWidth,
+                                    totalDuration: totalDuration,
+                                    color:
+                                        widget.timeAxisColor ??
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),
                     ),
                   ),
                 ),
+                if (widget.showAxes)
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    width: 40,
+                    height: plotHeight,
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        painter: FrequencyAxisPainter(
+                          minFrequencyHz: widget.minFrequencyHz,
+                          maxFrequencyHz: widget.maxFrequencyHz,
+                          color: widget.axisColor,
+                        ),
+                      ),
+                    ),
+                  ),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: CustomPaint(

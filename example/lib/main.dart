@@ -119,6 +119,7 @@ class _MyAppState extends State<MyApp> {
                 spectrogram: _spectrogram!,
                 frameDurationSeconds: _hopSize / _sampleRate,
                 visibleSeconds: 5,
+                maxFrequencyHz: _sampleRate / 2,
                 playheadPosition: _playheadPosition,
                 onPlayheadPositionChanged: (pos) {
                   setState(() {
